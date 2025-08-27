@@ -77,8 +77,6 @@ Create pluggable adapters with clear interfaces + unit tests:
 - [ ] JSON schemas for events  
 - [ ] Prompts & safety configs externalized  
 - [ ] Observability dashboards + alerts  
-- [ ] HIL (human-in-the-loop) console MVP  
-- [ ] Privacy & consent flow  
 - [ ] Test suite: unit, scenario, adversarial  
 
 ---
@@ -87,5 +85,6 @@ Create pluggable adapters with clear interfaces + unit tests:
 - Always follow this context when generating code.  
 - Default framework: **Python + CrewAI**.  
 - API layer: **FastAPI** (for gateway).  
-- Event system: **NATS/Kafka**.  
-- Database: simple **KVS (Redis/SQLite)** for MVP.  
+- Event system: **Celery**.  
+- Database: simple **KVS (Redis/SQLite)** for MVP.
+- User **Mem0** for storing history of communication

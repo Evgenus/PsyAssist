@@ -8,11 +8,21 @@ from datetime import datetime
 import uuid
 
 from crewai import Agent
-from langchain.tools import BaseTool
 
 from ..schemas.session import Session
 from ..schemas.events import BaseEvent, EventType, EventPriority
 from ..tools import RiskClassifier, PIIRedactor
+
+# Simple base tool class for compatibility
+class BaseTool:
+    """Base tool class for PsyAssist tools."""
+    def __init__(self, name: str, description: str):
+        self.name = name
+        self.description = description
+    
+    async def run(self, *args, **kwargs):
+        """Run the tool."""
+        raise NotImplementedError
 from ..config.prompts import AgentPrompt
 
 

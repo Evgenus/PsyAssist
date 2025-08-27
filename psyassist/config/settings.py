@@ -4,7 +4,8 @@ Main settings configuration for PsyAssist AI.
 
 import os
 from typing import Optional, List
-from pydantic import BaseSettings, Field, validator
+from pydantic import Field, validator
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
@@ -24,10 +25,6 @@ class Settings(BaseSettings):
     secret_key: str = Field(..., env="SECRET_KEY")
     access_token_expire_minutes: int = Field(30, env="ACCESS_TOKEN_EXPIRE_MINUTES")
     
-    # Database
-    database_url: str = Field("sqlite:///./psyassist.db", env="DATABASE_URL")
-    redis_url: str = Field("redis://localhost:6379", env="REDIS_URL")
-    
     # AI/LLM Configuration
     openai_api_key: Optional[str] = Field(None, env="OPENAI_API_KEY")
     anthropic_api_key: Optional[str] = Field(None, env="ANTHROPIC_API_KEY")
@@ -39,15 +36,13 @@ class Settings(BaseSettings):
     max_messages_per_session: int = Field(50, env="MAX_MESSAGES_PER_SESSION")
     session_cleanup_interval_minutes: int = Field(60, env="SESSION_CLEANUP_INTERVAL_MINUTES")
     
-    # Risk Assessment
+    # Risk Assessment Configuration
     risk_assessment_interval_messages: int = Field(3, env="RISK_ASSESSMENT_INTERVAL_MESSAGES")
     escalation_threshold: str = Field("HIGH", env="ESCALATION_THRESHOLD")
     emergency_threshold: str = Field("CRITICAL", env="EMERGENCY_THRESHOLD")
     
-    # Event System
-    event_bus_url: str = Field("nats://localhost:4222", env="EVENT_BUS_URL")
+    # Event System Configuration
     event_batch_size: int = Field(10, env="EVENT_BATCH_SIZE")
-    event_batch_timeout_seconds: int = Field(30, env="EVENT_BATCH_TIMEOUT_SECONDS")
     
     # Logging
     log_level: str = Field("INFO", env="LOG_LEVEL")
@@ -68,34 +63,13 @@ class Settings(BaseSettings):
     metrics_enabled: bool = Field(True, env="METRICS_ENABLED")
     health_check_interval_seconds: int = Field(30, env="HEALTH_CHECK_INTERVAL_SECONDS")
     
-    # Development
+    # Development Settings
     test_mode: bool = Field(False, env="TEST_MODE")
-    mock_external_services: bool = Field(False, env="MOCK_EXTERNAL_SERVICES")
+    mock_external_services: bool = Field(True, env="MOCK_EXTERNAL_SERVICES")
     
     class Config:
         env_file = ".env"
-        env_file_encoding = "utf-8"
         case_sensitive = False
-    
-    @validator("secret_key")
-    def validate_secret_key(cls, v):
-        if len(v) < 32:
-            raise ValueError("Secret key must be at least 32 characters long")
-        return v
-    
-    @validator("escalation_threshold", "emergency_threshold")
-    def validate_risk_thresholds(cls, v):
-        valid_thresholds = ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
-        if v not in valid_thresholds:
-            raise ValueError(f"Risk threshold must be one of: {valid_thresholds}")
-        return v
-    
-    @validator("default_llm_provider")
-    def validate_llm_provider(cls, v):
-        valid_providers = ["openai", "anthropic"]
-        if v not in valid_providers:
-            raise ValueError(f"LLM provider must be one of: {valid_providers}")
-        return v
 
 
 # Global settings instance

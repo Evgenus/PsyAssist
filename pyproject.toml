@@ -1,0 +1,75 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "psyassist-ai"
+version = "0.1.0"
+description = "Emergency emotional support system"
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "PsyAssist Team", email = "team@psyassist.ai"}
+]
+keywords = ["mental-health", "ai", "crewai", "crisis-support", "emotional-support"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Healthcare Industry",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+requires-python = ">=3.12"
+dependencies = [
+    # Core AI/ML dependencies
+    "crewai>=0.5.0",
+    "openai>=1.12.0",
+    "anthropic>=0.18.0",
+    
+    # Web framework and API
+    "fastapi>=0.109.0",
+    "uvicorn[standard]>=0.27.0",
+    
+    # Data validation and serialization
+    "pydantic>=2.6.0",
+    "pydantic-settings>=2.2.0",
+    
+    # Async HTTP client
+    "httpx>=0.26.0",
+    
+    # Security and cryptography
+    "cryptography>=42.0.0",
+    
+    # Logging and observability
+    "structlog>=24.1.0",
+    
+    # Environment and configuration
+    "python-dotenv>=1.0.1",
+]
+
+[project.urls]
+Homepage = "https://github.com/psyassist/psyassist-ai"
+Repository = "https://github.com/psyassist/psyassist-ai.git"
+"Bug Tracker" = "https://github.com/psyassist/psyassist-ai/issues"
+
+[project.scripts]
+psyassist = "psyassist.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["psyassist"]
+include = [
+    "/psyassist",
+    "/README.md",
+    "/LICENSE",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/psyassist",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]

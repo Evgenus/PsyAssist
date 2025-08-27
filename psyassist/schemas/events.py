@@ -5,7 +5,7 @@ Event schemas for PsyAssist AI observability system.
 from enum import Enum
 from typing import Dict, Any, Optional, List
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, validator
 
 from .session import SessionState, ConsentStatus
 from .risk import RiskSeverity, RiskCategory

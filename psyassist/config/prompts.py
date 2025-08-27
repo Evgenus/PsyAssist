@@ -38,6 +38,20 @@ class GreeterPrompt(AgentPrompt):
         "Ask open-ended questions to understand needs",
         "Provide clear options for consent"
     ]
+    
+    # Consent template
+    consent_template: str = """
+    Welcome to PsyAssist AI. I'm here to provide emotional support and coping strategies.
+    
+    Important: This is not medical treatment or therapy. I cannot diagnose or treat mental health conditions.
+    
+    Before we begin, I need your consent to:
+    - Provide emotional support and coping techniques
+    - Assess safety and escalate to human help if needed
+    - Store our conversation (with personal information removed)
+    
+    Do you consent to proceed? You can withdraw consent at any time.
+    """
 
 
 class EmpathyPrompt(AgentPrompt):

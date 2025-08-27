@@ -1,0 +1,15 @@
+version: '3.8'
+
+services:
+  psyassist:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=false
+      - SECRET_KEY=your-secret-key-here
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    volumes:
+      - ./env.example:/app/.env
+    restart: unless-stopped

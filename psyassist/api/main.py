@@ -3,7 +3,6 @@ Main FastAPI application for PsyAssist AI.
 """
 
 from fastapi import FastAPI, HTTPException, Depends, BackgroundTasks
-from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Dict, Any, Optional, List
 import asyncio
@@ -19,16 +18,8 @@ app = FastAPI(
     description="A CrewAI-based multi-agent system for emergency emotional and psychotherapy support",
     version="0.1.0",
     docs_url="/docs",
-    redoc_url="/redoc"
-)
-
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    redoc_url="/redoc",
+    debug=True,
 )
 
 # Create orchestrator instance
@@ -182,6 +173,8 @@ async def process_message(
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
 # Risk assessment endpoint
@@ -251,16 +244,16 @@ async def initiate_escalation(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Error handlers
-@app.exception_handler(404)
-async def not_found_handler(request, exc):
-    """Handle 404 errors."""
-    return {"error": "Not found", "detail": str(exc)}
+# # Error handlers
+# @app.exception_handler(404)
+# async def not_found_handler(request, exc):
+#     """Handle 404 errors."""
+#     return {"error": "Not found", "detail": str(exc)}
 
-@app.exception_handler(500)
-async def internal_error_handler(request, exc):
-    """Handle 500 errors."""
-    return {"error": "Internal server error", "detail": str(exc)}
+# @app.exception_handler(500)
+# async def internal_error_handler(request, exc):
+#     """Handle 500 errors."""
+#     return {"error": "Internal server error", "detail": str(exc)}
 
 # Root endpoint
 @app.get("/")

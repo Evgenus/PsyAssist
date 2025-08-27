@@ -10,40 +10,119 @@ A CrewAI-based multi-agent system for emergency emotional and psychotherapy supp
 - **State Machine Orchestration**: Session flow with risk-based fast-pathing
 - **Safety & Risk Handling**: Continuous risk assessment with automatic escalation
 - **Privacy-First**: PII redaction and consent-based data handling
-- **Observability**: Comprehensive logging and event tracking
 - **Tool Adapters**: Pluggable components for risk classification, hotline routing, and more
 
 ## Quick Start
 
-1. **Install dependencies**:
+### Prerequisites
+
+- Python 3.12 or higher
+- Python 3.12 or higher
+
+### Installation
+
+1. **Clone the repository**:
    ```bash
-   pip install -r requirements.txt
+   git clone https://github.com/psyassist/psyassist-ai.git
+   cd psyassist-ai
    ```
 
-2. **Set up environment**:
+2. **Install dependencies**:
    ```bash
-   cp .env.example .env
+   pip install -e .
+   ```
+
+3. **Set up environment**:
+   ```bash
+   cp env.example .env
    # Edit .env with your API keys and configuration
    ```
 
-3. **Run the system**:
+4. **Run the system**:
    ```bash
    # Start the API server
-   uvicorn psyassist.api.main:app --reload
+   python run.py
    
-   # Start the Celery worker
-   celery -A psyassist.workers.celery_app worker --loglevel=info
    ```
+
+## Docker Deployment
+
+### Using Docker Compose (Recommended)
+
+```bash
+# Set your API keys
+export OPENAI_API_KEY="your-openai-api-key"
+export ANTHROPIC_API_KEY="your-anthropic-api-key"
+
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f psyassist
+```
+
+### Using Docker directly
+
+```bash
+# Build the image
+docker build -t psyassist-ai .
+
+# Run with Redis
+docker run -p 8000:8000 --env-file .env psyassist-ai
+```
+
+## API Usage
+
+### Health Check
+```bash
+curl http://localhost:8000/health
+```
+
+### Create a Session
+```bash
+curl -X POST http://localhost:8000/sessions \
+  -H "Content-Type: application/json" \
+  -d '{"user_id": "user123", "metadata": {"location": "US"}}'
+```
+
+### Send a Message
+```bash
+curl -X POST http://localhost:8000/sessions/{session_id}/messages \
+  -H "Content-Type: application/json" \
+  -d '{"message": "I need some help today"}'
+```
+
+### API Documentation
+- Swagger UI: http://localhost:8000/docs
+- ReDoc: http://localhost:8000/redoc
+
+## Configuration
+
+### Environment Variables
+
+Key configuration options in `.env`:
+
+```bash
+# Required
+SECRET_KEY=your-super-secret-key-here
+OPENAI_API_KEY=your-openai-api-key
+
+# Optional
+ANTHROPIC_API_KEY=your-anthropic-api-key
+DEBUG=false
+SESSION_TIMEOUT_MINUTES=30
+ESCALATION_THRESHOLD=HIGH
+```
 
 ## Architecture
 
 ### Agents
 - **Greeter**: Welcome, triage, and consent collection
 - **Empathy**: Active listening and emotional grounding
-- **TherapyGuide**: Micro-interventions and coping techniques
-- **RiskAssessment**: Continuous risk monitoring
-- **Resource**: Local hotlines and information
-- **Escalation**: Hotline/human handoff
+- **TherapyGuide**: Coping techniques and micro-interventions
+- **RiskAssessment**: Continuous safety monitoring
+- **Resource**: Support resources and information
+- **Escalation**: Human handoff and emergency response
 
 ### Session Flow
 ```
@@ -69,31 +148,22 @@ psyassist/
 ├── core/            # Core business logic
 ├── schemas/         # Pydantic models and JSON schemas
 ├── tools/           # Tool adapters
-├── workers/         # Celery tasks
 └── config/          # Configuration and prompts
 ```
 
 ### Testing
+
 ```bash
-# Run all tests
-pytest
+# Run basic tests
+python test_basic.py
 
-# Run specific test categories
-pytest tests/unit/
-pytest tests/integration/
-pytest tests/scenarios/
+# Run interactive demo
+python -m psyassist.cli demo
 ```
-
-## Contributing
-
-1. Follow the coding style guidelines
-2. Write unit tests for new features
-3. Ensure all safety guardrails are maintained
-4. Update documentation as needed
 
 ## License
 
-[Add your license here]
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
