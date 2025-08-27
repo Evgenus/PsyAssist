@@ -23,8 +23,8 @@ A CrewAI-based multi-agent system for emergency emotional and psychotherapy supp
 
 1. **Clone the repository**:
    ```bash
-   git clone https://github.com/psyassist/psyassist-ai.git
-   cd psyassist-ai
+   git clone https://github.com/Evgenus/PsyAssist.git
+   cd PsyAssist
    ```
 
 2. **Install dependencies**:
@@ -65,10 +65,10 @@ docker-compose logs -f psyassist
 
 ```bash
 # Build the image
-docker build -t psyassist-ai .
+docker build -t psyassist .
 
 # Run with Redis
-docker run -p 8000:8000 --env-file .env psyassist-ai
+docker run -p 8000:8000 --env-file .env psyassist
 ```
 
 ## API Usage

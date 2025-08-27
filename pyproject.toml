@@ -9,7 +9,7 @@ description = "Emergency emotional support system"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "PsyAssist Team", email = "team@psyassist.ai"}
+    {name = "Eugene Chernyshov", email = "chernyshov.eugene@gmail.com"}
 ]
 keywords = ["mental-health", "ai", "crewai", "crisis-support", "emotional-support"]
 classifiers = [
@@ -51,9 +51,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/psyassist/psyassist-ai"
-Repository = "https://github.com/psyassist/psyassist-ai.git"
-"Bug Tracker" = "https://github.com/psyassist/psyassist-ai/issues"
+Homepage = "https://github.com/Evgenus/PsyAssist"
+Repository = "https://github.com/Evgenus/PsyAssist.git"
+"Bug Tracker" = "https://github.com/Evgenus/PsyAssist/issues"
 
 [project.scripts]
 psyassist = "psyassist.cli:main"
