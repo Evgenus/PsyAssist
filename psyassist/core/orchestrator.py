@@ -7,7 +7,7 @@ import uuid
 from typing import Dict, Any, Optional, List
 from datetime import datetime, timedelta
 
-from ..schemas.session import Session, SessionState, SessionUpdate
+from ..schemas.session import Session, SessionState, SessionUpdate, ConsentStatus
 from ..schemas.events import BaseEvent, EventType, EventPriority
 from ..schemas.risk import RiskAssessment
 from ..core.state_machine import StateMachine
@@ -284,6 +284,19 @@ class PsyAssistOrchestrator:
         metadata = response.get('metadata', {})
         if metadata:
             session.metadata.update(metadata)
+        
+        # Update session state and consent if provided in metadata
+        if 'next_state' in metadata:
+            try:
+                session.state = SessionState(metadata['next_state'])
+            except ValueError:
+                pass  # Invalid state value
+        
+        if 'consent_granted' in metadata and metadata['consent_granted']:
+            session.consent_status = ConsentStatus.GRANTED
+        
+        if 'consent_denied' in metadata and metadata['consent_denied']:
+            session.consent_status = ConsentStatus.DENIED
         
         return session
     

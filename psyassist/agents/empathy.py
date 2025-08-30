@@ -36,6 +36,13 @@ class EmpathyAgent(BasePsyAssistAgent):
         # Assess risk first
         risk_assessment = await self.assess_risk(message, session)
         
+        # Check for aggressive language that might need escalation
+        emotional_analysis = self._analyze_emotions(message)
+        if emotional_analysis['is_aggressive']:
+            # Trigger risk assessment for aggressive messages
+            risk_assessment['should_escalate'] = True
+            # Note: We can't modify enum values directly, but the risk assessment should handle this
+        
         # Handle high-risk situations
         if risk_assessment['should_escalate']:
             return await self._handle_escalation(session, message, risk_assessment)
@@ -79,26 +86,37 @@ class EmpathyAgent(BasePsyAssistAgent):
     def _analyze_emotions(self, message: str) -> Dict[str, Any]:
         """Analyze the emotional content of the message."""
         message_lower = message.lower()
+        print(f"🔍 DEBUG: Analyzing emotions for: '{message_lower}'")
         
         emotions = {
-            'sadness': ['sad', 'depressed', 'hopeless', 'worthless', 'empty', 'lonely', 'grief'],
-            'anger': ['angry', 'furious', 'rage', 'hate', 'frustrated', 'irritated', 'mad'],
-            'fear': ['afraid', 'scared', 'terrified', 'anxious', 'worried', 'panic', 'fear'],
-            'shame': ['ashamed', 'embarrassed', 'guilty', 'humiliated', 'worthless'],
-            'confusion': ['confused', 'lost', 'unsure', 'uncertain', 'don\'t know'],
-            'overwhelm': ['overwhelmed', 'stressed', 'exhausted', 'tired', 'burned out'],
-            'isolation': ['alone', 'lonely', 'isolated', 'no one', 'nobody cares'],
-            'hopelessness': ['hopeless', 'no point', 'nothing matters', 'give up']
+            'sadness': ['sad', 'depressed', 'hopeless', 'worthless', 'empty', 'lonely', 'grief', 'сумно', 'сумний', 'депресія'],
+            'anger': ['angry', 'furious', 'rage', 'hate', 'frustrated', 'irritated', 'mad', 'fuck', 'shit', 'damn', 'злий', 'зла', 'гнів'],
+            'fear': ['afraid', 'scared', 'terrified', 'anxious', 'worried', 'panic', 'fear', 'страх', 'страшно', 'тривога'],
+            'shame': ['ashamed', 'embarrassed', 'guilty', 'humiliated', 'worthless', 'сором', 'винний'],
+            'confusion': ['confused', 'lost', 'unsure', 'uncertain', 'don\'t know', 'плутаюся', 'не знаю'],
+            'overwhelm': ['overwhelmed', 'stressed', 'exhausted', 'tired', 'burned out', 'втомлений', 'стрес'],
+            'isolation': ['alone', 'lonely', 'isolated', 'no one', 'nobody cares', 'самотній', 'самотно'],
+            'hopelessness': ['hopeless', 'no point', 'nothing matters', 'give up', 'безнадійно', 'марно'],
+            'happiness': ['happy', 'good', 'great', 'wonderful', 'amazing', 'excellent', 'радий', 'рада', 'добре', 'чудово', 'feel good', 'feeling good'],
+            'calm': ['calm', 'peaceful', 'relaxed', 'tranquil', 'спокійний', 'спокійно', 'мирно'],
+            'gratitude': ['thankful', 'grateful', 'appreciate', 'дякую', 'вдячний', 'thank you', 'thanks']
         }
         
         detected_emotions = {}
         for emotion, keywords in emotions.items():
-            if any(keyword in message_lower for keyword in keywords):
-                detected_emotions[emotion] = True
+            for keyword in keywords:
+                if keyword in message_lower:
+                    detected_emotions[emotion] = True
+                    print(f"✅ DEBUG: Found emotion '{emotion}' with keyword '{keyword}'")
+                    break
+        
+        # Check for aggressive language
+        aggressive_indicators = ['fuck', 'shit', 'damn', 'hate', 'kill', 'die', 'death', 'suicide', 'end it all', 'fuck you']
+        is_aggressive = any(indicator in message_lower for indicator in aggressive_indicators)
         
         # Assess intensity
         intensity_indicators = {
-            'high': ['very', 'extremely', 'completely', 'totally', 'absolutely'],
+            'high': ['very', 'extremely', 'completely', 'totally', 'absolutely', 'fuck', 'shit', 'damn'],
             'medium': ['really', 'quite', 'pretty', 'rather'],
             'low': ['a little', 'slightly', 'somewhat', 'kind of']
         }
@@ -109,11 +127,22 @@ class EmpathyAgent(BasePsyAssistAgent):
                 intensity = level
                 break
         
-        return {
+        # Determine primary emotion
+        if is_aggressive:
+            primary_emotion = 'anger'
+        elif detected_emotions:
+            primary_emotion = list(detected_emotions.keys())[0]
+        else:
+            primary_emotion = 'neutral'
+        
+        result = {
             'detected_emotions': detected_emotions,
             'intensity': intensity,
-            'primary_emotion': list(detected_emotions.keys())[0] if detected_emotions else 'neutral'
+            'primary_emotion': primary_emotion,
+            'is_aggressive': is_aggressive
         }
+        print(f"🔍 DEBUG: Analysis result: {result}")
+        return result
     
     def _create_reflective_response(self, message: str, emotional_analysis: Dict[str, Any]) -> str:
         """Create a reflective response that mirrors the user's emotions."""
@@ -170,13 +199,16 @@ class EmpathyAgent(BasePsyAssistAgent):
         
         validation_statements = {
             'sadness': "It's completely understandable to feel sad when going through difficult times.",
-            'anger': "It's natural to feel angry when things aren't going the way you hoped.",
+            'anger': "It's natural to feel angry when things aren't going the way you hoped. I can hear the intensity in your words.",
             'fear': "Fear is a very real and valid emotion, especially when facing uncertainty.",
             'shame': "Shame can be incredibly painful, and it's okay to feel this way.",
             'confusion': "It's normal to feel confused when things are unclear or uncertain.",
             'overwhelm': "Feeling overwhelmed is a natural response when there's too much to handle.",
             'isolation': "Feeling alone can be one of the most painful experiences.",
-            'hopelessness': "When things feel hopeless, it can be incredibly difficult to see a way forward."
+            'hopelessness': "When things feel hopeless, it can be incredibly difficult to see a way forward.",
+            'happiness': "It's wonderful that you're feeling good! Positive emotions are just as important to acknowledge.",
+            'calm': "It's great that you're feeling calm and peaceful. That's a healthy emotional state.",
+            'gratitude': "Gratitude is such a beautiful emotion. It's wonderful that you're able to feel thankful."
         }
         
         return validation_statements.get(primary_emotion, "Your feelings are valid and important.")

@@ -162,6 +162,8 @@ Always prioritize user safety and escalate when in doubt.
             if hasattr(session, key):
                 setattr(session, key, value)
         
+        # Note: This only updates the local session object
+        # For persistence, the orchestrator should call session_manager.update_session()
         return session
     
     def get_session_context(self, session: Session) -> Dict[str, Any]:

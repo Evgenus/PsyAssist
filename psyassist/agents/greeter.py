@@ -46,13 +46,23 @@ class GreeterAgent(BasePsyAssistAgent):
             return await self._handle_initial_greeting(session, message, context)
         elif session.state == SessionState.CONSENTED:
             return await self._handle_consent_granted(session, message, context)
+        elif session.state == SessionState.TRIAGE:
+            return await self._handle_consent_granted(session, message, context)
         else:
             return await self._handle_general_greeting(session, message, context)
     
     async def _handle_initial_greeting(self, session: Session, message: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Handle the initial greeting and consent request."""
+        # Debug logging
+        print(f"🔍 DEBUG: Processing message: '{message}'")
+        print(f"🔍 DEBUG: Is consent granted: {self._is_consent_granted(message)}")
+        print(f"🔍 DEBUG: Is consent denied: {self._is_consent_denied(message)}")
+        print(f"🔍 DEBUG: Session state: {session.state}")
+        print(f"🔍 DEBUG: Session consent: {session.consent_status}")
+        
         # Check if user has already given consent
         if self._is_consent_granted(message):
+            print(f"✅ DEBUG: Consent granted, updating session...")
             session.consent_status = ConsentStatus.GRANTED
             session.state = SessionState.CONSENTED
             session = self.update_session(session)
@@ -94,6 +104,17 @@ class GreeterAgent(BasePsyAssistAgent):
     
     async def _handle_consent_granted(self, session: Session, message: str, context: Dict[str, Any]) -> Dict[str, Any]:
         """Handle messages after consent has been granted."""
+        # Check if triage has already been completed
+        if session.state == SessionState.TRIAGE and 'triage_info' in session.metadata:
+            # Triage already done, redirect to support loop
+            return self.format_response(
+                "I understand. Let me connect you with a support agent who can help you better.",
+                {
+                    'triage_completed': True,
+                    'next_state': SessionState.SUPPORT_LOOP.value
+                }
+            )
+        
         # Conduct initial triage
         triage_info = await self._conduct_triage(session, message)
         
@@ -155,21 +176,51 @@ class GreeterAgent(BasePsyAssistAgent):
         """Check if user has granted consent."""
         consent_indicators = [
             'yes', 'i consent', 'i agree', 'okay', 'ok', 'sure', 'proceed',
-            'continue', 'start', 'begin', 'ready', 'go ahead'
+            'continue', 'start', 'begin', 'ready', 'go ahead',
+            # Ukrainian consent indicators
+            'так', 'згоден', 'згодна', 'згода', 'добре', 'гаразд', 'продовжувати',
+            'почати', 'починати', 'готовий', 'готова', 'вперед', 'давайте',
+            'я згоден', 'я згодна', 'я погоджуюся', 'я погоджуюсь'
         ]
         
         message_lower = message.lower().strip()
-        return any(indicator in message_lower for indicator in consent_indicators)
+        print(f"🔍 DEBUG: Checking consent for: '{message_lower}'")
+        
+        # More precise matching to avoid false positives
+        words = message_lower.split()
+        for indicator in consent_indicators:
+            # Check for exact word match
+            if indicator in words:
+                print(f"✅ DEBUG: Found consent indicator: '{indicator}'")
+                return True
+        
+        print(f"❌ DEBUG: No consent indicators found")
+        return False
     
     def _is_consent_denied(self, message: str) -> bool:
         """Check if user has denied consent."""
         denial_indicators = [
             'no', 'i decline', 'i don\'t consent', 'not now', 'later',
-            'maybe later', 'i\'m not sure', 'i need to think about it'
+            'maybe later', 'i\'m not sure', 'i need to think about it',
+            # Ukrainian denial indicators
+            'ні', 'не згоден', 'не згодна', 'відмовляюся', 'не хочу',
+            'пізніше', 'можливо пізніше', 'не впевнений', 'не впевнена',
+            'потрібно подумати', 'не зараз', 'не готовий', 'не готова'
         ]
         
         message_lower = message.lower().strip()
-        return any(indicator in message_lower for indicator in denial_indicators)
+        print(f"🔍 DEBUG: Checking denial for: '{message_lower}'")
+        
+        # More precise matching to avoid false positives
+        words = message_lower.split()
+        for indicator in denial_indicators:
+            # Check for exact word match
+            if indicator in words:
+                print(f"❌ DEBUG: Found denial indicator: '{indicator}'")
+                return True
+        
+        print(f"✅ DEBUG: No denial indicators found")
+        return False
     
     async def _conduct_triage(self, session: Session, message: str) -> Dict[str, Any]:
         """Conduct initial triage to understand user needs."""
@@ -190,14 +241,38 @@ class GreeterAgent(BasePsyAssistAgent):
         
         # Define concern categories
         concerns = {
-            'depression': ['sad', 'depressed', 'hopeless', 'worthless', 'empty', 'numb'],
-            'anxiety': ['anxious', 'worried', 'nervous', 'panic', 'fear', 'stress'],
-            'relationship': ['relationship', 'partner', 'family', 'friend', 'breakup', 'divorce'],
-            'work': ['work', 'job', 'career', 'boss', 'colleague', 'stress'],
-            'grief': ['loss', 'grief', 'death', 'died', 'passed away', 'missing'],
-            'trauma': ['trauma', 'abuse', 'assault', 'accident', 'ptsd'],
-            'substance': ['alcohol', 'drugs', 'addiction', 'substance', 'drinking'],
-            'general': ['help', 'support', 'talk', 'feeling', 'emotion']
+            'depression': ['sad', 'depressed', 'hopeless', 'worthless', 'empty', 'numb',
+                          # Ukrainian depression indicators
+                          'сумно', 'сумний', 'сумна', 'депресія', 'депресивний', 'безнадійно',
+                          'марно', 'порожньо', 'онімілий', 'оніміла', 'відчай', 'відчайдушний'],
+            'anxiety': ['anxious', 'worried', 'nervous', 'panic', 'fear', 'stress',
+                       # Ukrainian anxiety indicators
+                       'тривожно', 'тривога', 'хвилююся', 'паніка', 'страх', 'стрес',
+                       'нервуватися', 'неспокійно', 'занепокоєння'],
+            'relationship': ['relationship', 'partner', 'family', 'friend', 'breakup', 'divorce',
+                           # Ukrainian relationship indicators
+                           'стосунки', 'партнер', 'сім\'я', 'друг', 'розрив', 'розлучення',
+                           'відносини', 'чоловік', 'дружина', 'батьки', 'діти'],
+            'work': ['work', 'job', 'career', 'boss', 'colleague', 'stress',
+                    # Ukrainian work indicators
+                    'робота', 'карьєра', 'начальник', 'колега', 'стрес на роботі',
+                    'професія', 'офіс', 'заробіток'],
+            'grief': ['loss', 'grief', 'death', 'died', 'passed away', 'missing',
+                     # Ukrainian grief indicators
+                     'втрата', 'горе', 'смерть', 'помер', 'померла', 'поминати',
+                     'сумувати', 'втратив', 'втратила'],
+            'trauma': ['trauma', 'abuse', 'assault', 'accident', 'ptsd',
+                      # Ukrainian trauma indicators
+                      'травма', 'насильство', 'напад', 'аварія', 'птср',
+                      'психологічна травма', 'емоційна травма'],
+            'substance': ['alcohol', 'drugs', 'addiction', 'substance', 'drinking',
+                         # Ukrainian substance indicators
+                         'алкоголь', 'наркотики', 'залежність', 'пити', 'спиртне',
+                         'куріння', 'табак', 'сигарети'],
+            'general': ['help', 'support', 'talk', 'feeling', 'emotion',
+                       # Ukrainian general indicators
+                       'допомога', 'підтримка', 'розмовляти', 'почуватися', 'емоції',
+                       'почуття', 'проблема', 'складно', 'важко']
         }
         
         for concern, keywords in concerns.items():
